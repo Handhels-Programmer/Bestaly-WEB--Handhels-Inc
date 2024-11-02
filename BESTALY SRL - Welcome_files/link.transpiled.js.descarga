@@ -1,0 +1,95 @@
+var _Class;
+function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
+function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
+function _objectWithoutProperties(e, t) { if (null == e) return {}; var o, r, i = _objectWithoutPropertiesLoose(e, t); if (Object.getOwnPropertySymbols) { var s = Object.getOwnPropertySymbols(e); for (r = 0; r < s.length; r++) o = s[r], t.includes(o) || {}.propertyIsEnumerable.call(e, o) && (i[o] = e[o]); } return i; }
+function _objectWithoutPropertiesLoose(r, e) { if (null == r) return {}; var t = {}; for (var n in r) if ({}.hasOwnProperty.call(r, n)) { if (e.includes(n)) continue; t[n] = r[n]; } return t; }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+SK.React = SK.React || {};
+SK.React.Component = SK.React.Component || {};
+SK.React.Component.Link = (_Class = class extends React.Component {
+  /**
+   *
+   * @method constructor
+   * @private
+   *
+   * @param  {Object}    props
+   */
+  constructor(props) {
+    super(props);
+    this.state = this.constructor.getLinkOptionsState(this.props);
+  }
+
+  /**
+   *
+   * @method getDerivedStateFromProps
+   * @private
+   *
+   * @param  {Object}                  next_props
+   */
+  static getDerivedStateFromProps(next_props) {
+    return SK.React.Component.Link.getLinkOptionsState(next_props);
+  }
+
+  /**
+   *
+   * @method getLinkOptionsState
+   * @private
+   *
+   * @param  {Object}          props
+   */
+  static getLinkOptionsState(props) {
+    let {
+        internalLink,
+        externalLink,
+        default_value,
+        href,
+        options = {},
+        link = null,
+        data_attributes = false,
+        onClick = () => {}
+      } = props,
+      attr = _objectWithoutProperties(props, ["internalLink", "externalLink", "default_value", "href", "options", "link", "data_attributes", "onClick"]);
+
+    // Process link content and if is not passed but internal link is passed, use it
+    href =
+    // Process internal link components to get only the url
+    SK.LinkSerializer.deserialize(internalLink || link) ||
+    // Asume is node_id and not composite link, so deserialize it before proceeding
+    SK.Util.deserializeNodeId(internalLink || link);
+
+    // If link is number, or an anchor, print it with server side placeholder
+    var link_content = Number(href) || /^anchor_\d+_\d+/.test(href) ? 'page_node_id://' + SK.Singletons.env.get('user_id') + '_' + href : SK.Util.buildLink(href);
+    href = (href ? link_content : externalLink) || default_value;
+    var is_link_active = href != SK.React.Component.Link.EMPTY_LINK;
+    return _objectSpread({}, attr, {
+      href: is_link_active ? href : '#',
+      target: options.target || null,
+      rel: options.rel || null,
+      'data-target': data_attributes ? options.target : null,
+      'data-href': data_attributes ? options.href : null,
+      onClick: event => {
+        if (!is_link_active) {
+          event.preventDefault();
+        }
+        onClick(event);
+      }
+    });
+  }
+
+  /**
+   *
+   * @method render
+   * @private
+   *
+   * @return {Object}
+   */
+  render() {
+    return /*#__PURE__*/React.createElement("a", this.state, !SK.Singletons.env.get('admin_mode') && ![null, '', '_self'].includes(this.state.target) && /*#__PURE__*/React.createElement("img", {
+      alt: "(@@(External link opens in new tab or window)@@)",
+      src: "/Shared/Images/blank.gif#SYSTEM",
+      className: "sk-system-hidden-element"
+    }), this.props.children);
+  }
+}, _defineProperty(_Class, "EMPTY_LINK", 'javascript:void(0)'), _Class);
